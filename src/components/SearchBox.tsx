@@ -8,15 +8,44 @@ interface SearchBoxProps {
 
 export function SearchBox({ onSearch, isLoading }: SearchBoxProps) {
   const [query, setQuery] = useState('');
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set authorization token for the search widget
-    const searchWidget = document.querySelector('gen-search-widget');
-    if (searchWidget) {
-      // Note: Replace with actual JWT or OAuth token from your backend
-      (searchWidget as any).authToken = "<JWT or OAuth token provided by your backend>";
-    }
+    // Fetch auth token from backend
+    const fetchAuthToken = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/auth/token');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setAuthToken(data.token);
+        setAuthError(null);
+        
+        // Set authorization token for the search widget
+        const searchWidget = document.querySelector('gen-search-widget');
+        if (searchWidget) {
+          (searchWidget as any).authToken = data.token;
+        }
+      } catch (error) {
+        console.error('Failed to fetch auth token:', error);
+        setAuthError('Authentication failed. Please check if the auth server is running.');
+      }
+    };
+
+    fetchAuthToken();
   }, []);
+
+  useEffect(() => {
+    // Update widget token when authToken changes
+    if (authToken) {
+      const searchWidget = document.querySelector('gen-search-widget');
+      if (searchWidget) {
+        (searchWidget as any).authToken = authToken;
+      }
+    }
+  }, [authToken]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +56,21 @@ export function SearchBox({ onSearch, isLoading }: SearchBoxProps) {
 
   return (
     <div className="relative max-w-4xl mx-auto px-6 mb-12">
+      {/* Auth Status Indicator */}
+      {authError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <strong>Authentication Error:</strong> {authError}
+          <br />
+          <span className="text-xs">Run `npm run auth-server` in a separate terminal to start the authentication server.</span>
+        </div>
+      )}
+      
+      {authToken && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          ✅ Connected to Vertex AI Search
+        </div>
+      )}
+      
       <div className="relative">
         <Lightbulb className="absolute left-6 top-1/2 transform -translate-y-1/2 w-6 h-6 text-yellow-500 animate-pulse" />
         
