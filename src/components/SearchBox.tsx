@@ -15,7 +15,7 @@ export function SearchBox({ onSearch, isLoading }: SearchBoxProps) {
     // Fetch auth token from backend
     const fetchAuthToken = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/auth/token');
+        const response = await fetch('/.netlify/functions/token');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -30,7 +30,7 @@ export function SearchBox({ onSearch, isLoading }: SearchBoxProps) {
         }
       } catch (error) {
         console.error('Failed to fetch auth token:', error);
-        setAuthError('Authentication failed. Please check if the auth server is running.');
+        setAuthError('Authentication failed.');
       }
     };
 
@@ -60,8 +60,6 @@ export function SearchBox({ onSearch, isLoading }: SearchBoxProps) {
       {authError && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           <strong>Authentication Error:</strong> {authError}
-          <br />
-          <span className="text-xs">Run `npm run auth-server` in a separate terminal to start the authentication server.</span>
         </div>
       )}
       
